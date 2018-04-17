@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to='App'>
+  <inherits name='com.google.gwt.user.User' />
+  <inherits name="com.google.gwt.logging.Logging"/> <!-- TODO  -->
+
+  <inherits name="org.treblereel.gwt.Three"/>
+
+  <entry-point class='org.treblereel.gwt.ar.client.App' />
+  <source path='client' />
+  <source path='shared' />
+
+  <set-property name="gwt.logging.enabled" value="TRUE"/>
+  <set-property name="gwt.logging.logLevel" value="ALL"/>
+
+</module>
