@@ -43,7 +43,7 @@
 
     <dependencies>
 
-        <!--    <dependency>
+<!--            <dependency>
               <groupId>org.treblereel</groupId>
               <artifactId>gwt-three</artifactId>
               <version>0.1-SNAPSHOT</version>
@@ -52,7 +52,7 @@
         <dependency>
             <groupId>com.github.treblereel</groupId>
             <artifactId>three4g</artifactId>
-            <version>dbc2e3dade</version>
+            <version>a050819997</version>
         </dependency>
 
         <dependency>
@@ -81,8 +81,6 @@
     </dependencies>
 
     <build>
-        <!-- Output classes directly into the webapp, so that IDEs and "mvn process-classes" update them in DevMode -->
-        <outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>
 
         <plugins>
 
@@ -100,11 +98,22 @@
                 </executions>
                 <!-- Plugin configuration. There are many available options, see
                   gwt-maven-plugin documentation at codehaus.org -->
+
                 <configuration>
                     <runTarget>App.html</runTarget>
                     <modules>
                         <module>org.treblereel.gwt.ar.App</module>
                     </modules>
+                    <logLevel>INFO</logLevel>
+                    <noServer>false</noServer>
+                    <extraJvmArgs>-Xmx2048m -XX:CompileThreshold=7000 -Djava.io.tmpdir=${project.build.directory}
+                    </extraJvmArgs>
+                    <disableCastChecking>true</disableCastChecking>
+                    <soycDetailed>false</soycDetailed>
+                    <hostedWebapp>src/main/webapp</hostedWebapp>
+                    <strict>true</strict>
+                    <compileReport>true</compileReport>
+                    <saveSource>true</saveSource>
                 </configuration>
             </plugin>
             <plugin>
@@ -120,6 +129,8 @@
                                 <include>src/main/webapp/WEB-INF/deploy/</include>
                                 <include>src/main/webapp/WEB-INF/lib/*</include>
                                 <include>src/main/webapp/WEB-INF/lib/**/*</include>
+                                <include>src/main/webapp/WEB-INF/classes/</include>
+                                <include>src/main/webapp/App/</include>
                                 <include>deployments/</include>
                             </includes>
                         </fileset>
