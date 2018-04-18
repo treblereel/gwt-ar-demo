@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 import static elemental2.dom.DomGlobal.document;
@@ -53,12 +54,11 @@ public class App implements EntryPoint {
     private ArToolkitContext arToolkitContext;
     private ArMarkerControls artoolkitMarker;
     private Group markerRoot;
-    //var arToolkitContext, onRenderFcts, arToolkitSource, markerRoot, artoolkitMarker, lastTimeMsec;
     private Object3D tube1, tube2, mid, details;
     private Scene model;
     private Double pulse;
     private Double lastTimeMsec, nowMsec;
-    private List<BiFunction> onRenderFcts;
+    private List<Function> onRenderFcts;
 
 
     public void onModuleLoad() {
@@ -73,13 +73,13 @@ public class App implements EntryPoint {
 
                 model.scale.x = model.scale.y = model.scale.z = 0.1f;
 
-                details = model.getObjectByName("details"); //TODO chech boolean arg
+                details = model.getObjectByName("details");
                 tube1 = model.getObjectByName("tube1");
 
                 Mesh mesh_1 = Js.uncheckedCast(tube1.children[0]);
                 Material a = mesh_1.material;
                 a.transparent = true;
-                a.side = Constants.BackSide; //TODO
+                a.side = Constants.BackSide;
                 a.blending = Constants.AdditiveBlending;
                 a.opacity = 0.9f;
 
@@ -92,7 +92,7 @@ public class App implements EntryPoint {
                 c.opacity = 0.9f;
 
                 mid = model.getObjectByName("mid");
-                Mesh mesh_3 = Js.uncheckedCast(tube2.children[0]);
+                Mesh mesh_3 = Js.uncheckedCast(mid.children[0]);
                 Material b = mesh_3.material;
                 b.transparent = true;
                 b.blending = Constants.AdditiveBlending;
@@ -176,7 +176,7 @@ public class App implements EntryPoint {
         // initialize it
 
         // update artoolkit on every frame
-        onRenderFcts.add((o1, o2) -> {
+        onRenderFcts.add((o1) -> {
             if (arToolkitSource.ready == false) return false;
             return arToolkitContext.update(arToolkitSource.domElement);
         });
@@ -194,7 +194,7 @@ public class App implements EntryPoint {
         //////// Add object to scene via the marker /////////
         markerRoot.add(model);
 
-        onRenderFcts.add((o, o2) -> {
+        onRenderFcts.add((o) -> {
             tube1.rotation.y -= 0.01;
             tube2.rotation.y += 0.005;
             mid.rotation.y -= 0.008;
@@ -204,7 +204,7 @@ public class App implements EntryPoint {
 
 
         // render the scene
-        onRenderFcts.add((o, o2) -> {
+        onRenderFcts.add((o) -> {
             renderer.render(scene, camera);
             return true;
         });
@@ -216,25 +216,11 @@ public class App implements EntryPoint {
     }
 
     private void animate() {
-
-/*        // measure time
-        if(lastTimeMsec == null){
-            lastTimeMsec = nowMsec - 1000 / 60;
-        }
-        double deltaMsec = Math.min(200, nowMsec - lastTimeMsec);
-
-        lastTimeMsec = nowMsec;
         pulse = new Date().getTime() * 0.0009;
-
-        // call each update function
-        onRenderFcts.forEach( e -> e.apply(deltaMsec / 1000, nowMsec / 1000));*/
-
-        pulse = new Date().getTime() * 0.0009;
-
         // keep looping
         AnimationScheduler.get().requestAnimationFrame(timestamp -> {
             if (renderer.domElement.parentNode != null) {
-                onRenderFcts.forEach( e -> e.apply(null, null));
+                onRenderFcts.forEach( e -> e.apply(null));
                 animate();
             }
         });
