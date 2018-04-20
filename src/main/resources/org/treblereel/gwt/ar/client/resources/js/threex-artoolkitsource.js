@@ -127,6 +127,8 @@ THREEx.ArToolkitSource.prototype._initSourceWebcam = function(onReady) {
 	navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
 	var domElement = document.createElement('video');
+       domElement.setAttribute('autoplay', '');
+       domElement.setAttribute('playsinline', '');
 	domElement.style.width = this.parameters.displayWidth+'px'
 	domElement.style.height = this.parameters.displayHeight+'px'
 
@@ -141,32 +143,33 @@ THREEx.ArToolkitSource.prototype._initSourceWebcam = function(onReady) {
 	navigator.mediaDevices.enumerateDevices().then(function(devices) {
                 // define getUserMedia() constraints
                 var constraints = {
-			audio: false,
-			video: {
-				mandatory: {
-					maxWidth: _this.parameters.sourceWidth,
-					maxHeight: _this.parameters.sourceHeight
-		    		}
-		  	}
+                audio: false,
+                video: {
+                    maxWidth: _this.parameters.sourceWidth,
+                    maxHeight: _this.parameters.sourceHeight
                 }
+    }
 
-		devices.forEach(function(device) {
-			if( device.kind !== 'videoinput' )	return
-			constraints.video.optional = [{sourceId: device.deviceId}]
-		});
 
-		// OLD API
-                // it it finds the videoSource 'environment', modify constraints.video
-                // for (var i = 0; i != sourceInfos.length; ++i) {
-                //         var sourceInfo = sourceInfos[i];
-                //         if(sourceInfo.kind == "video" && sourceInfo.facing == "environment") {
-                //                 constraints.video.optional = [{sourceId: sourceInfo.id}]
-                //         }
-                // }
+        var cameras = devices.filter(d => d.kind.toLowerCase() ===  'videoinput' );
 
-		navigator.getUserMedia(constraints, function success(stream) {
+        if(cameras.length === 1 ){
+            constraints.video.optional = [{sourceId: cameras[0].deviceId}];
+        } else {
+           var back = cameras.filter(d => d.label.toLowerCase().includes('back'));
+           if(back.length === 1){
+              constraints.video.optional = [{sourceId: back[0].deviceId}];
+           } else {
+              constraints.video.optional = [{sourceId: cameras[0].deviceId}];
+           }
+        }
+
+		navigator.mediaDevices.getUserMedia(constraints).then(function success(stream) {
 			// console.log('success', stream);
-			domElement.src = window.URL.createObjectURL(stream);
+			domElement.srcObject = stream;
+
+
+
 			// to start the video, when it is possible to start it only on userevent. like in android
 			document.body.addEventListener('click', function(){
 				domElement.play();

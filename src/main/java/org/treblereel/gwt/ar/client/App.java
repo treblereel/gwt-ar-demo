@@ -33,7 +33,6 @@ import org.treblereel.gwt.three4g.scenes.Scene;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
