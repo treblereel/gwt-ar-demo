@@ -1,8 +1,10 @@
 package org.treblereel.gwt.ar.client.api;
 
 import elemental2.dom.HTMLElement;
+import elemental2.dom.HTMLVideoElement;
 import jsinterop.annotations.JsConstructor;
 import jsinterop.annotations.JsType;
+import jsinterop.base.JsPropertyMap;
 
 /**
  * @author Dmitrii Tikhomirov <chani@me.com>
@@ -11,7 +13,7 @@ import jsinterop.annotations.JsType;
 @JsType(isNative = true, namespace = "THREEx")
 public class ArToolkitSource {
 
-    public HTMLElement domElement;
+    public HTMLVideoElement domElement;
     public boolean ready;
 
     @JsConstructor
@@ -20,7 +22,7 @@ public class ArToolkitSource {
     }
 
     @JsConstructor
-    public ArToolkitSource(String sourceType){
+    public ArToolkitSource(JsPropertyMap parameters){
 
     }
 
