@@ -1,13 +1,15 @@
 var THREEx = THREEx || {}
 
-THREEx.ArToolkitSource = function(parameters){	
+THREEx.ArToolkitSource = function(parameters){
+
 	// handle default parameters
 	this.parameters = {
 		// type of source - ['webcam', 'image', 'video']
 		sourceType : parameters.sourceType !== undefined ? parameters.sourceType : 'webcam',
 		// url of the source - valid if sourceType = image|video
 		sourceUrl : parameters.sourceUrl !== undefined ? parameters.sourceUrl : null,
-		
+		use_facing_mode : parameters.use_facing_mode !== undefined ? parameters.use_facing_mode : null,
+
 		// resolution of at which we initialize in the source image
 		sourceWidth: parameters.sourceWidth !== undefined ? parameters.sourceWidth : 640,
 		sourceHeight: parameters.sourceHeight !== undefined ? parameters.sourceHeight : 480,
@@ -123,12 +125,13 @@ THREEx.ArToolkitSource.prototype._initSourceVideo = function(onReady) {
 
 THREEx.ArToolkitSource.prototype._initSourceWebcam = function(onReady) {
 	var _this = this
-	// TODO make it static
 	navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
 	var domElement = document.createElement('video');
-	domElement.style.width = this.parameters.displayWidth+'px'
-	domElement.style.height = this.parameters.displayHeight+'px'
+       domElement.setAttribute('autoplay', '');
+       domElement.setAttribute('playsinline', '');
+       domElement.style.width = this.parameters.displayWidth+'px'
+       domElement.style.height = this.parameters.displayHeight+'px'
 
 
 	if (navigator.getUserMedia === undefined ){
@@ -138,36 +141,21 @@ THREEx.ArToolkitSource.prototype._initSourceWebcam = function(onReady) {
 		alert("WebRTC issue! navigator.mediaDevices.enumerateDevices not present in your browser");		
 	}
 
-	navigator.mediaDevices.enumerateDevices().then(function(devices) {
-                // define getUserMedia() constraints
                 var constraints = {
-			audio: false,
-			video: {
-				mandatory: {
-					maxWidth: _this.parameters.sourceWidth,
-					maxHeight: _this.parameters.sourceHeight
-		    		}
-		  	}
+                    audio: false,
+                    video: {
+                        deviceId:  _this.parameters.deviceId,
+                        maxWidth:  _this.parameters.sourceWidth,
+                        maxHeight: _this.parameters.sourceHeight
+                    }
                 }
 
-		devices.forEach(function(device) {
-			if( device.kind !== 'videoinput' )	return
-			constraints.video.optional = [{sourceId: device.deviceId}]
-		});
+        if(_this.parameters.use_facing_mode){
+            constraints.video.facingMode = {exact: "environment"};
+        }
 
-		// OLD API
-                // it it finds the videoSource 'environment', modify constraints.video
-                // for (var i = 0; i != sourceInfos.length; ++i) {
-                //         var sourceInfo = sourceInfos[i];
-                //         if(sourceInfo.kind == "video" && sourceInfo.facing == "environment") {
-                //                 constraints.video.optional = [{sourceId: sourceInfo.id}]
-                //         }
-                // }
-
-		navigator.getUserMedia(constraints, function success(stream) {
-			// console.log('success', stream);
-			domElement.src = window.URL.createObjectURL(stream);
-			// to start the video, when it is possible to start it only on userevent. like in android
+		navigator.mediaDevices.getUserMedia(constraints).then(function success(stream) {
+			domElement.srcObject = stream;
 			document.body.addEventListener('click', function(){
 				domElement.play();
 			})
@@ -180,13 +168,8 @@ THREEx.ArToolkitSource.prototype._initSourceWebcam = function(onReady) {
 				clearInterval(interval)
 			}, 1000/50);
 		}, function(error) {
-			console.log("Can't access user media", error);
-			alert("Can't access user media :()");
+			alert(err.name + ": " + err.message);
 		});
-	}).catch(function(err) {
-		console.log(err.name + ": " + err.message);
-	});
-
 	return domElement
 }
 

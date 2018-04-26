@@ -5,6 +5,11 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.JavaScriptObject;
 import elemental2.dom.Event;
 import elemental2.dom.EventListener;
+import elemental2.dom.HTMLButtonElement;
+import elemental2.dom.HTMLDivElement;
+import elemental2.dom.MediaDeviceInfo;
+import elemental2.dom.MediaStreamTrack;
+import elemental2.dom.Navigator;
 import jsinterop.base.Js;
 import jsinterop.base.JsPropertyMap;
 import org.treblereel.gwt.ar.client.api.ArMarkerControls;
@@ -31,11 +36,12 @@ import org.treblereel.gwt.three4g.renderers.WebGLRendererParameters;
 import org.treblereel.gwt.three4g.scenes.Scene;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static elemental2.dom.DomGlobal.document;
 import static elemental2.dom.DomGlobal.window;
@@ -50,16 +56,16 @@ public class App implements EntryPoint {
     private WebGLRenderer renderer;
     private Scene scene;
     private Camera camera;
-    private ArToolkitSource  arToolkitSource;
+    private ArToolkitSource arToolkitSource;
     private ArToolkitContext arToolkitContext;
     private ArMarkerControls artoolkitMarker;
     private Group markerRoot;
     private Object3D tube1, tube2, mid, details;
     private Scene model;
     private Double pulse;
-    private Double lastTimeMsec, nowMsec;
     private List<Function> onRenderFcts;
 
+    private boolean useFacingMode = false;
 
     public void onModuleLoad() {
         loadScripts();
@@ -98,11 +104,27 @@ public class App implements EntryPoint {
                 b.blending = Constants.AdditiveBlending;
                 b.opacity = 0.9f;
 
-                init();
+                findVideoDevices();
 
             }
         });
 
+    }
+
+    private void findVideoDevices() {
+        Navigator navigator = window.navigator;
+
+        navigator.mediaDevices.enumerateDevices().then(p0 -> {
+            List<MediaDeviceInfo> cameras = Arrays.stream(p0).filter(e -> e.getKind().toLowerCase().equals("videoinput")).collect(Collectors.toList());
+
+            if (cameras.size() > 1) {
+                useFacingMode = true;
+            }
+
+            init();
+
+            return null;
+        });
     }
 
     private void init() {
@@ -117,7 +139,6 @@ public class App implements EntryPoint {
         document.body.appendChild(renderer.domElement);
 
         // array of functions for the rendering loop
-
         onRenderFcts = new ArrayList<>();
 
         // init scene and camera
@@ -131,29 +152,9 @@ public class App implements EntryPoint {
 
         //////// Inititalize Basic Camera /////////
         camera = new Camera();
+
         scene.add(camera);
-
-        //////// Handle ARToolkitSource /////////
-        arToolkitSource = new ArToolkitSource("webcam");
-
-        arToolkitSource.init(new OnReady() {
-            @Override
-            public void onReady() {
-                arToolkitSource.onResize(renderer.domElement);
-            }
-        });
-
-        // handle resize
-        window.addEventListener("resize", new EventListener() {
-            @Override
-            public void handleEvent(Event evt) {
-                arToolkitSource.onResize(renderer.domElement);
-
-            }
-        });
-
-        //////// Initialize ArToolkitContext /////////
-        // create atToolkitContext
+        initCamera(useFacingMode);
 
         ArToolkitContextProperty arToolkitContextProperty = new ArToolkitContextProperty();
         arToolkitContextProperty.debug = false;
@@ -198,7 +199,7 @@ public class App implements EntryPoint {
             tube1.rotation.y -= 0.01;
             tube2.rotation.y += 0.005;
             mid.rotation.y -= 0.008;
-            details.position.y = (float)(5 + 3 * Math.sin(1.2 * pulse));
+            details.position.y = (float) (5 + 3 * Math.sin(1.2 * pulse));
             return true;
         });
 
@@ -208,11 +209,35 @@ public class App implements EntryPoint {
             renderer.render(scene, camera);
             return true;
         });
-        // run the rendering loop
-        lastTimeMsec = null;
 
         animate();
 
+    }
+
+    private void initCamera(boolean use_facing_mode) {
+        //////// Handle ARToolkitSource /////////
+
+        JsPropertyMap property = JsPropertyMap.of();
+        property.set("sourceType", "webcam");
+        property.set("use_facing_mode", use_facing_mode);
+
+        arToolkitSource = new ArToolkitSource(property);
+
+        arToolkitSource.init(new OnReady() {
+            @Override
+            public void onReady() {
+                arToolkitSource.onResize(renderer.domElement);
+            }
+        });
+
+        // handle resize
+        window.addEventListener("resize", new EventListener() {
+            @Override
+            public void handleEvent(Event evt) {
+                arToolkitSource.onResize(renderer.domElement);
+
+            }
+        });
     }
 
     private void animate() {
@@ -220,7 +245,7 @@ public class App implements EntryPoint {
         // keep looping
         AnimationScheduler.get().requestAnimationFrame(timestamp -> {
             if (renderer.domElement.parentNode != null) {
-                onRenderFcts.forEach( e -> e.apply(null));
+                onRenderFcts.forEach(e -> e.apply(null));
                 animate();
             }
         });
