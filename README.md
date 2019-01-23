@@ -14,7 +14,7 @@ You could give it a try, there are only few steps:
 1) in chrome for android and in safari for ios open the link https://env-9441834.cloud.unispace.io
 2) Agree to use the Camera, don't worry, please, it sends nothing to me..
 3) once it get started, look through the camera at the marker
-                 https://github.com/…/gwt-ar…/blob/master/pattern/pattern.pdf
+                 https://github.com/treblereel/gwt-ar-demo/blob/master/pattern/pattern.pdf
 4) magic 
 
 Don't worry, please, it sends nothing to me..
